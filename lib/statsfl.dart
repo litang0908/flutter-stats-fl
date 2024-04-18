@@ -17,7 +17,7 @@ class StatsFl extends StatefulWidget {
   final int maxFps;
 
   /// A child to be displayed under the Stats
-  final Widget child;
+  final Widget? child;
 
   /// Where to align the stats relative to the child
   final Alignment? align;
@@ -33,7 +33,7 @@ class StatsFl extends StatefulWidget {
 
   StatsFl(
       {Key? key,
-      required this.child,
+      this.child,
       this.width = 120,
       this.height = 40,
       this.totalTime = 15,
@@ -46,7 +46,7 @@ class StatsFl extends StatefulWidget {
     assert(width >= 80, "width must be >= 80px");
     assert(sampleTime > 0, "sampleTime must be > 0.");
     assert(totalTime >= sampleTime * 2, "totalTime must at least twice sampleTime");
-    assert((showText != true || height >= 30), "If showText=true, height must be at least 30px");
+    assert((showText != true || height >= 20), "If showText=true, height must be at least 20px");
     assert((height >= 8), "height must be >= 8px");
   }
 
@@ -118,30 +118,42 @@ class _StatsFlState extends State<StatsFl> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Stack(
-          children: <Widget>[
-            widget.child,
-            if (widget.isEnabled)
-              IgnorePointer(
+    Widget buildStats() => IgnorePointer(
+          child: SizedBox(
+            width: widget.width,
+            height: widget.height,
+            child: RepaintBoundary(
+              child: ValueListenableBuilder<List<_FpsEntry>>(
+                valueListenable: _entries,
+                builder: (_, entries, ___) => _buildPainter(entries),
+              ),
+            ),
+          ),
+        );
+
+    // Exit early if we're disabled
+    if (widget.isEnabled == false) return widget.child ?? SizedBox.shrink();
+    // Exit early if there is no child
+    final content = widget.child == null
+        ? buildStats()
+        : Stack(
+            children: [
+              widget.child!,
+              Positioned.fill(
                 child: Align(
                   alignment: widget.align ?? Alignment.topLeft,
-                  child: SizedBox(
-                    width: widget.width,
-                    height: widget.height,
-                    child: RepaintBoundary(
-                      child: ValueListenableBuilder<List<_FpsEntry>>(
-                        valueListenable: _entries,
-                        builder: (_, entries, ___) => _buildPainter(entries),
-                      ),
-                    ),
-                  ),
+                  child: buildStats(),
                 ),
-              ),
-          ],
-        ),
+              )
+            ],
+          );
+
+    // Wrap stats + child in a stack
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Material(
+        color: Colors.transparent,
+        child: content,
       ),
     );
   }
@@ -162,7 +174,11 @@ class _StatsFlState extends State<StatsFl> {
           child: widget.showText
               ? Text(
                   "${fToString(_fps)} FPS (${fToString(minFps)}-${fToString(maxFps)})",
-                  style: TextStyle(color: _getColorForFps(lastFps), fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(
+                    color: _getColorForFps(lastFps),
+                    fontWeight: FontWeight.bold,
+                    fontSize: widget.height < 30 ? 9 : 11,
+                  ),
                 )
               : Container(),
         ));

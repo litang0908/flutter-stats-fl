@@ -1,4 +1,13 @@
-## [2.0.1-nullsafety]
+## [2.2.0+1]
+* Fix issues with isEnabled
+* Remove extra ignorePointer
+* Change min-height to 20px
+
+## [2.1.0]
+* Set Material color to Transparent to allow Stats to sit on top of content in a stack
+* Child is now optional
+
+## [2.0.1]
 * Fixed initialization bug
 
 ## [2.0.0-nullsafety]
