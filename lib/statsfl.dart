@@ -51,16 +51,17 @@ class StatsFl extends StatefulWidget {
   }
 
   @override
-  _StatsFlState createState() => _StatsFlState();
+  State createState() => StatsFlState();
 }
 
-class _StatsFlState extends State<StatsFl> {
-  ValueNotifier<List<_FpsEntry>> _entries = ValueNotifier([]);
+class StatsFlState extends State<StatsFl> {
+  final ValueNotifier<List<_FpsEntry>> _entries = ValueNotifier([]);
   int _lastCalcTime = 0;
   late Ticker _ticker;
   double _ticks = 0;
   double _fps = 0;
   bool _shouldRepaint = false;
+  bool _isEnabled = true;
 
   int get nowMs => DateTime.now().millisecondsSinceEpoch;
 
@@ -75,18 +76,20 @@ class _StatsFlState extends State<StatsFl> {
     super.initState();
     _fps = widget.maxFps.toDouble();
     _ticker = Ticker(_handleTick);
-    if (widget.isEnabled) _ticker.start();
+    _isEnabled = widget.isEnabled;
+    if (_isEnabled) _ticker.start();
     _lastCalcTime = nowMs;
   }
 
   @override
   void didUpdateWidget(StatsFl oldWidget) {
-    final isEnabled = widget.isEnabled;
-
-    if (oldWidget.isEnabled != isEnabled) {
-      isEnabled ? _ticker.start() : _ticker.stop();
+    if (_isEnabled) {
+      if (!_ticker.isActive) {
+        _ticker.start();
+      }
+    } else {
+      _ticker.stop();
     }
-
     super.didUpdateWidget(oldWidget);
   }
 
@@ -96,8 +99,15 @@ class _StatsFlState extends State<StatsFl> {
     super.dispose();
   }
 
+  //update enable
+  void updateEnable(bool enable) {
+    setState(() {
+      _isEnabled = enable;
+    });
+  }
+
   void _handleTick(Duration d) {
-    if (!widget.isEnabled) {
+    if (!_isEnabled) {
       _lastCalcTime = nowMs;
       return;
     }
@@ -132,7 +142,7 @@ class _StatsFlState extends State<StatsFl> {
         );
 
     // Exit early if we're disabled
-    if (widget.isEnabled == false) return widget.child ?? SizedBox.shrink();
+    if (_isEnabled == false) return widget.child ?? const SizedBox.shrink();
     // Exit early if there is no child
     final content = widget.child == null
         ? buildStats()
@@ -169,7 +179,7 @@ class _StatsFlState extends State<StatsFl> {
     return CustomPaint(
         foregroundPainter: _StatsPainter(state: this),
         child: Container(
-          padding: EdgeInsets.only(left: 4, top: 2),
+          padding: const EdgeInsets.only(left: 4, top: 2),
           color: Colors.black54.withOpacity(.8),
           child: widget.showText
               ? Text(
@@ -200,7 +210,7 @@ class _FpsEntry {
 }
 
 class _StatsPainter extends CustomPainter {
-  final _StatsFlState state;
+  final StatsFlState state;
 
   double get topPadding => state.widget.showText ? 20 : 4;
 
