@@ -106,6 +106,8 @@ class StatsFlState extends State<StatsFl> {
     });
   }
 
+  bool get isEnabled => _isEnabled;
+
   void _handleTick(Duration d) {
     if (!_isEnabled) {
       _lastCalcTime = nowMs;
