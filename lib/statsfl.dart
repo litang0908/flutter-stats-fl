@@ -82,18 +82,6 @@ class StatsFlState extends State<StatsFl> {
   }
 
   @override
-  void didUpdateWidget(StatsFl oldWidget) {
-    if (_isEnabled) {
-      if (!_ticker.isActive) {
-        _ticker.start();
-      }
-    } else {
-      _ticker.stop();
-    }
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
   void dispose() {
     _ticker.dispose();
     super.dispose();
@@ -101,9 +89,15 @@ class StatsFlState extends State<StatsFl> {
 
   //update enable
   void updateEnable(bool enable) {
-    setState(() {
-      _isEnabled = enable;
-    });
+    _isEnabled = enable;
+    setState(() {});
+    if (_isEnabled) {
+      if (!_ticker.isActive) {
+        _ticker.start();
+      }
+    } else {
+      _ticker.stop();
+    }
   }
 
   bool get isEnabled => _isEnabled;
